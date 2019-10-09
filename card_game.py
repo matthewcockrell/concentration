@@ -135,27 +135,42 @@ def main():
                     screen.blit(two_text, (1050, 910)) #Display player two's new score
                     screen.blit(player_one_text, (800, 1000)) #Change the current player text to player 1
                     pygame.display.flip()
+            #No match!
             else:
                 print("No Match!")
                 count_cards_selected = 0
                 start_timer = pygame.time.get_ticks()
                 time_counting = True
-                while time_counting:
+                while time_counting: #Allow the player 1.5 seconds to view the turned over cards
                     seconds = (pygame.time.get_ticks()-start_timer)/1000
-                    if seconds > 1.5:
+                    if seconds > 1.5: #Flip the cards back over so only the back is visible
                         screen.blit(selected_card_one.back_image.convert(), (selected_card_one.screen_pos_left, selected_card_one.screen_pos_top))
                         screen.blit(selected_card_two.back_image.convert(), (selected_card_two.screen_pos_left, selected_card_two.screen_pos_top))
-                        if player_turn % 2 == 0:
+                        if player_turn % 2 == 0: #Is this player one's turn? 
                             screen.fill((76, 171, 3), player_one_text.get_rect(left=800, top=1000))
-                            screen.blit(player_two_text, (800, 1000))
+                            screen.blit(player_two_text, (800, 1000)) #Change the player text to player 2
                             pygame.display.flip()
                             player_turn += 1
-                        elif player_turn % 2 == 1:
+                        elif player_turn % 2 == 1: #Is this player two's turn? 
                             screen.fill((76, 171, 3), player_two_text.get_rect(left=800, top=1000))
-                            screen.blit(player_one_text, (800, 1000))
+                            screen.blit(player_one_text, (800, 1000)) #Change the player text to player 1
                             pygame.display.flip()
                             player_turn += 1
                         break
                         
+#Call main() to run the game
 if __name__ == "__main__":
     main()
+
+
+#Helpful resources consulted: 
+
+#Official pygame documentation - https://www.pygame.org/docs/ 
+#Pygame blit tutorial - https://dr0id.bitbucket.io/legacy/pygame_tutorial01.html 
+#Info about clicking on a surface - https://blog.penjee.com/mouse-clicked-on-image-in-pygame/
+#Info about using the timer - https://stackoverflow.com/questions/30720665/countdown-timer-in-pygame
+
+#Open-source card graphics obtained from - https://opengameart.org/content/playing-cards-vector-png
+#                                          https://opengameart.org/content/cards-set
+
+
