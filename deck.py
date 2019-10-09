@@ -1,101 +1,176 @@
 #Matthew Cockrell
-#deck.py
-#Implementation of a Deck of Cards - Designed for use in a Pygame application
+#card_game.py
+#Implementation of the "Concentration" memory card-game using Pygame 
+
+import pygame 
+from deck import Deck, Card
+
+#Begin by showing the instructions on the screen until the user clicks the screen
+def show_instructions(screen): 
+    instructions = pygame.image.load("instructions.png")
+    pygame.transform.scale(instructions, (1500, 1050))
+    screen.blit(instructions, (0,0))
+    pygame.display.flip()
+    loop = True
+    while loop:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                loop = False
+                break
+                
+            if event.type == pygame.MOUSEBUTTONDOWN: #Begin the game when the user clicks
+                loop = False
+                break
 
 
-import pygame
-from random import randint
+def main():
+    pygame.init()
+    pygame.display.set_caption("Memory Game - Concentration")
+    screen = pygame.display.set_mode((1500,1050))  
 
-class Deck:
-    cards = [] #The list of cards
-    size = 52  #The size of the deck will always be 52, as we are accouting for 4 suites, each with 13 cards
+    show_instructions(screen) #Show the instructions 
 
-    #Initialze a new deck of cards 
-    def __init__(self):
-        self.cards.append(Card("hearts", "ace")) #Initialize the hearts 
-        for num in range(2, 11):
-            self.cards.append(Card("hearts", str(num)))
-        self.cards.append(Card("hearts", "jack"))
-        self.cards.append(Card("hearts", "queen"))
-        self.cards.append(Card("hearts", "king"))
+    screen.fill((76, 171, 3))
+    running = True #Set the main game loop to true 
 
-        self.cards.append(Card("clubs", "ace")) #Initialize the clubs
-        for num in range(2, 11):
-            self.cards.append(Card("clubs", str(num)))
-        self.cards.append(Card("clubs", "jack"))
-        self.cards.append(Card("clubs", "queen"))
-        self.cards.append(Card("clubs", "king"))
+    deck = Deck()
+    deck.shuffle() #Create and shuffle the deck of cards 
 
-        self.cards.append(Card("spades", "ace")) #Intitialize the spades 
-        for num in range(2, 11):
-            self.cards.append(Card("spades", str(num))) 
-        self.cards.append(Card("spades", "jack"))
-        self.cards.append(Card("spades", "queen"))
-        self.cards.append(Card("spades", "king"))
+    #Set up the board by displaying all of the face-down cards
+    left = 25
+    top = 100
+    count = 0
+    for j in range(0, 5): #5 rows 
+        for i in range (count, count+10): #10 cards in each row 
+            left += 125
+            deck.cards[i].screen_pos_left = left #Keep track of the left, or X, position of the card 
+            deck.cards[i].screen_pos_top = top #Keep track of the top, or Y, position of the card 
+            surface = deck.cards[i].back_image.convert()
+            screen.blit(surface, (deck.cards[i].screen_pos_left, deck.cards[i].screen_pos_top))
+        count = count + 10
+        top = top + 150
+        left = 25
 
-        self.cards.append(Card("diamonds", "ace")) #Initialize the diamonds 
-        for num in range(2, 11):
-            self.cards.append(Card("diamonds", str(num)))
-        self.cards.append(Card("diamonds", "jack"))
-        self.cards.append(Card("diamonds", "queen"))
-        self.cards.append(Card("diamonds", "king"))
+    #The two additional cards go on the sixth row 
+    deck.cards[50].screen_pos_left = 150
+    deck.cards[50].screen_pos_top = 850
+    surface = deck.cards[50].back_image.convert()
+    screen.blit(surface, (deck.cards[50].screen_pos_left, deck.cards[50].screen_pos_top))
 
-        #Set the corresponding image and color for each card 
-        for card in self.cards:
-            image = pygame.image.load("PlayingCards/PNG-cards-1.3/"+card.toString()+".png")
-            back_image = pygame.image.load("PlayingCards/PNG-cards-1.3/back.png")
-            card.image = pygame.transform.scale(image, (100,125)) #Scale the image correctly
-            card.back_image = pygame.transform.scale(back_image, (100, 125))
-            if card.suite == "hearts" or card.suite == "diamonds":
-                card.color = "red"
-            elif card.suite == "spades" or card.suite == "clubs":
-                card.color = "black"
-            
+    deck.cards[51].screen_pos_left = 275
+    deck.cards[51].screen_pos_top = 850
+    surface = deck.cards[51].back_image.convert()
+    screen.blit(surface, (deck.cards[51].screen_pos_left, deck.cards[51].screen_pos_top))
+       
+    pygame.display.flip() #Write changes to the screen 
+    
+    count_cards_selected = 0 #Keep track of the number of cards selected per turn 
+    player_turn = 0 #Even = player one's turn, odd = player two's turn 
+    player_one_score = 0 #Keep track of the scores for each player 
+    player_two_score = 0
+    
+    black = (0, 0, 0)
+    font = pygame.font.Font('freesansbold.ttf', 32) 
+    one_text = font.render("Player One Score: " + str(player_one_score), True, black) #Display each players's score
+    screen.blit(one_text, (550, 910))
+    two_text = font.render("Player Two Score: " + str(player_two_score), True, black)
+    screen.blit(two_text, (1050, 910))
 
-    #Shuffle the deck of the cards (Using a Knuth shuffle)
-    def shuffle(self):
-        for card in self.cards:
-            card.deck_pos = randint(0, 1000)
-        self.sort()
-
-    #Implementation of bubble sort to sort the cards based on deck position number
-    def sort(self):
-        deck_of_cards = self.cards
-        bubble = 0
-        while bubble < len(deck_of_cards):
-            for i in range (0, len(deck_of_cards)-1):
-                if deck_of_cards[i].deck_pos >= deck_of_cards[i+1].deck_pos: #Compare each pair of cards 
-                    temp = deck_of_cards[i+1]
-                    deck_of_cards[i+1] = deck_of_cards[i]
-                    deck_of_cards[i] = temp #Swap if the 1st card has a position number greater than the 2nd
-            bubble += 1
-        self.cards = deck_of_cards
+    player_one_text = font.render("Player One's Turn!", True, (255,255,255)) #Display the current player's turn
+    player_two_text = font.render("Player Two's Turn!", True, (255,255,255))
+    screen.blit(player_one_text, (800, 1000))
+   
+    pygame.display.flip()
 
 
-    #Return a string representation of the deck
-    def toString(self):
-        deckStr = ""
-        for card in self.cards:
-            deckStr += card.toString() + "\n"
-        return deckStr
-
-#Card class to represent a card
-class Card:
-    def __init__(self, suite, number):
-        self.suite = suite
-        self.number = number
-        self.color = "No Color Assigned"
-        self.deck_pos = 0
-        self.image = None
-        self.back_image = None
-        self.screen_pos_top = 0
-        self.screen_pos_left= 0
+    #Main game loop 
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.MOUSEBUTTONDOWN: #Player clicks a card 
+                x, y = event.pos #pinpoint the coordinates of the click
+                for card in deck.cards:
+                    if card.image.get_rect(left=card.screen_pos_left, top=card.screen_pos_top).collidepoint(x,y): #Did they click a card?
+                        if count_cards_selected == 0: #Make sure they can't click the same card twice
+                            last_card_selected = card.toString()
+                        if count_cards_selected == 1:
+                            if card.toString() == last_card_selected: #If clicking the same card twice, break the loop
+                                break
+                        count_cards_selected+=1 #Update the number of cards selected 
+                        screen.blit(card.image.convert(), (card.screen_pos_left, card.screen_pos_top)) #turn over the card 
+                        pygame.display.flip()
+                        if count_cards_selected == 1: #Output helpful messages to the console - not seen in the GUI
+                            selected_card_one = card
+                            print("Card One: " + selected_card_one.toString() + " (" + selected_card_one.color + ")")
+                        elif count_cards_selected == 2:
+                            selected_card_two = card
+                            print("Card Two: " + selected_card_two.toString() + " (" + selected_card_two.color + ")")
         
-    
-    #Return a string representation of the card 
-    def toString(self):
-        return (self.number + "_of_" + self.suite)
-    
+        #Check for a match if the player has selected two cards 
+        if count_cards_selected == 2:
+            #We have a match! 
+            if selected_card_one.color == selected_card_two.color and selected_card_one.number == selected_card_two.number: #Color and number (rank) must match
+                print("It's a match!")
+                count_cards_selected = 0
+                if player_turn % 2 == 0: #Is this player one's turn? 
+                    screen.fill((76, 171, 3), one_text.get_rect(left=550, top=910))
+                    screen.fill((76, 171, 3), player_one_text.get_rect(left=800, top=1000))
+                    player_one_score += 1
+                    player_turn += 1
+                    one_text = font.render("Player One Score: " + str(player_one_score), True, black) 
+                    print("Player One's Score is now: ", player_one_score)
+                    screen.blit(one_text, (550, 910)) #Display player one's new score
+                    screen.blit(player_two_text, (800, 1000)) #Change the current player text to player 2
+                    pygame.display.flip()
+                    
 
+                elif player_turn % 2 == 1: #Is this player two's turn? 
+                    screen.fill((76, 171, 3), two_text.get_rect(left=1050, top=910))
+                    screen.fill((76, 171, 3), player_two_text.get_rect(left=800, top=1000))
+                    player_two_score += 1
+                    player_turn+=1
+                    print("Player Two's Score is now: ", player_two_score)
+                    two_text = font.render("Player Two Score: " + str(player_two_score), True, black)
+                    screen.blit(two_text, (1050, 910)) #Display player two's new score
+                    screen.blit(player_one_text, (800, 1000)) #Change the current player text to player 1
+                    pygame.display.flip()
+            #No match!
+            else:
+                print("No Match!")
+                count_cards_selected = 0
+                start_timer = pygame.time.get_ticks()
+                time_counting = True
+                while time_counting: #Allow the player 1.5 seconds to view the turned over cards
+                    seconds = (pygame.time.get_ticks()-start_timer)/1000
+                    if seconds > 1.5: #Flip the cards back over so only the back is visible
+                        screen.blit(selected_card_one.back_image.convert(), (selected_card_one.screen_pos_left, selected_card_one.screen_pos_top))
+                        screen.blit(selected_card_two.back_image.convert(), (selected_card_two.screen_pos_left, selected_card_two.screen_pos_top))
+                        if player_turn % 2 == 0: #Is this player one's turn? 
+                            screen.fill((76, 171, 3), player_one_text.get_rect(left=800, top=1000))
+                            screen.blit(player_two_text, (800, 1000)) #Change the player text to player 2
+                            pygame.display.flip()
+                            player_turn += 1
+                        elif player_turn % 2 == 1: #Is this player two's turn? 
+                            screen.fill((76, 171, 3), player_two_text.get_rect(left=800, top=1000))
+                            screen.blit(player_one_text, (800, 1000)) #Change the player text to player 1
+                            pygame.display.flip()
+                            player_turn += 1
+                        break
+                        
+#Call main() to run the game
+if __name__ == "__main__":
+    main()
+
+
+#Helpful resources consulted: 
+
+#Official pygame documentation - https://www.pygame.org/docs/ 
+#Pygame blit tutorial - https://dr0id.bitbucket.io/legacy/pygame_tutorial01.html 
+#Info about clicking on a surface - https://blog.penjee.com/mouse-clicked-on-image-in-pygame/
+#Info about using the timer - https://stackoverflow.com/questions/30720665/countdown-timer-in-pygame
+
+#Open-source card graphics obtained from - https://opengameart.org/content/playing-cards-vector-png
+#                                          https://opengameart.org/content/cards-set
 
 
